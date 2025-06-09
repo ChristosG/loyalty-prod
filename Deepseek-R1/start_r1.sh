@@ -1,7 +1,7 @@
 docker run --rm -it --net host --ulimit memlock=-1 --ulimit stack=67108864 \
     --security-opt=label=disable --security-opt seccomp=unconfined \
     --tmpfs /tmp:exec --user root \
-    --gpus "device=all" \
+    --gpus "device=1" \
     --ipc=host \
     -p8000:8000 -p8001:8001 -p8002:8002 \
     --name trtllm251 \
