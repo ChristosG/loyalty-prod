@@ -1,0 +1,14 @@
+Flask
+requests
+cloudscraper
+beautifulsoup4
+readability-lxml
+sqlalchemy
+psycopg2-binary
+redis
+requests-html
+kafka-python
+# Optionally, for embeddings:
+sentence-transformers
+lxml[html_clean]
+lxml_html_clean

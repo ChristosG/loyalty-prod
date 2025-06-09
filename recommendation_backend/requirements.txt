@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+requests
+cloudscraper
+beautifulsoup4
+readability-lxml
+sqlalchemy
+psycopg2-binary
+redis
+requests-html
+sentence-transformers
+lxml[html_clean]
+transformers
+torch
+pydantic 
+python-jose 

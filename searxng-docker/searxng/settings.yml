@@ -1,0 +1,22 @@
+# see https://docs.searxng.org/admin/settings/settings.html#settings-use-default-settings
+use_default_settings: true
+server:
+
+  secret_key: "{{ env('SEARXNG_SECRET_KEY') }}" 
+  limiter: false  
+  image_proxy: true
+  trusted_proxies:
+    - "127.0.0.1"
+    - "::1"
+api:
+  enabled: true
+
+search:
+  formats:
+    - html
+    - json
+
+ui:
+  static_use_hash: true
+redis:
+  url: redis://redis:6379/0

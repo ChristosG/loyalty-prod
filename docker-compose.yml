@@ -1,0 +1,142 @@
+version: "3.8"
+
+services:
+  # --- Zookeeper ---
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2182:2181" 
+    # networks:
+    #   - shared_network
+
+  # --- Kafka Broker ---
+  kafka:
+    image: confluentinc/cp-kafka:7.3.0
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    ports:
+      - "9093:9093"    
+      - "29092:29092" 
+    # networks:
+    #   - shared_network
+
+  # --- Postgres Database ---
+  postgres:
+    image: ankane/pgvector:latest
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydatabase
+    command: ["postgres", "-c", "wal_level=logical"]
+    ports:
+      - "5433:5432" 
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d
+    # networks:
+    #   - shared_network
+
+  # --- Kafka Connect (Debezium) ---
+  kafka-connect:
+    image: debezium/connect:1.9
+    depends_on:
+      - kafka
+      - postgres
+    environment:
+      BOOTSTRAP_SERVERS: kafka:29092
+      GROUP_ID: "1"
+      CONFIG_STORAGE_TOPIC: my_connect_configs
+      OFFSET_STORAGE_TOPIC: my_connect_offsets
+      STATUS_STORAGE_TOPIC: my_connect_statuses
+      KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+    ports:
+      - "8084:8083"  
+    # networks:
+    #   - shared_network
+
+  # --- Redis 
+  redis:
+    image: redis:7
+    ports:
+      - "6380:6379"  
+    command: ["redis-server", "--maxmemory", "6gb", "--maxmemory-policy", "allkeys-lfu"]
+    volumes:
+      - redisdata:/data
+    # networks:
+    #   - shared_network
+
+  recommendation-backend:
+    build: ./recommendation_backend
+    ports:
+      - "8123:8123" 
+    environment: 
+      POSTGRES_URL: "postgresql://user:password@postgres:5432/mydatabase"
+      REDIS_HOST: "redis" 
+      REDIS_PORT: "6379" 
+      SEARXNG_URL: "http://searxng:8080/search" 
+      LLM_MODEL_NAME: "ensemble" 
+      TRITON_SERVER_URL: "host.docker.internal:8000" 
+      TOKENIZER_PATH: "/home/chris/engines/DeepSeek-R1-Distill-Llama-8B" 
+    depends_on:
+      - postgres
+      - redis
+      #- scraper
+      - kafka
+     # - kafka-consumer
+    # networks:
+    #   - shared_network
+    volumes:
+      - /home/chris/engines/DeepSeek-R1-Distill-Llama-8B:/home/chris/engines/DeepSeek-R1-Distill-Llama-8B
+      #- /mnt/nvme512/engines/Meta-Llama-3.1-8B-Instruct:/mnt/nvme512/engines/Meta-Llama-3.1-8B-Instruct # Mount tokenizer volume
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # kafka-consumer:
+  #   build: ./kafka_consumer  
+  #   depends_on:
+  #     - kafka  
+  #   networks:
+  #     - shared_network
+  #   restart: on-failure
+
+  #--- Scraper Service (Flask-based) ---
+  # scraper:
+  #   build: ./scraper
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
+  #   depends_on:
+  #     - postgres
+  #     - kafka
+  #     - kafka-connect
+  #     - redis
+  #   environment:
+  #     POSTGRES_URL: "postgresql://user:password@postgres:5432/mydatabase"
+  #     REDIS_HOST: "redis"
+  #     REDIS_PORT: "6379"
+  #     KAFKA_BROKER: "kafka:29092"
+  #     SEARXNG_URL: "http://searxng:8080/search"
+  #   ports:
+  #     - "5000:5000" 
+  #   networks:
+  #     - shared_network
+
+volumes:
+  pgdata:
+  redisdata:
+
+# networks:
+#   shared_network:
+#     external: true
+

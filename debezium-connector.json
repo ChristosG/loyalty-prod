@@ -1,0 +1,17 @@
+{
+  "name": "postgres-scraped-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "tasks.max": "1",
+    "database.hostname": "postgres",
+    "database.port": "5432",
+    "database.user": "user",
+    "database.password": "password",
+    "database.dbname": "mydatabase",
+    "database.server.name": "postgresdb",
+    "table.include.list": "public.scraped_results",
+    "plugin.name": "pgoutput",
+    "slot.name": "debezium_slot",
+    "publication.name": "dbz_publication"
+  }
+}
