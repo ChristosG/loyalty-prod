@@ -200,10 +200,9 @@ docker-compose up --build
 
 Once the services are up, open your browser and navigate to [http://localhost:3000](http://localhost:3000) to chat with Krikri.
 
-## TODO
+## Adjustments
 
-- **Memory Context**:  
-  Currently, every question is treated as standalone without maintaining previous conversation context. Future updates will include session memory to track conversation history.
+On this docker-compose.yml im using solid paths of my machine as -volumes. These needs to be changed accordingly.
 
 ---
 
