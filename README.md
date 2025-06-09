@@ -81,3 +81,12 @@ cd ./grpcbot
 docker compose up -d
 ```
 will also start the Chatbot ui, which can be found on http://localhost:3000
+
+
+**4. Searxng local search engine (optional instead of tavily)**
+
+```bash
+cd ./searxng-docker
+docker compose up -d
+```
+Can be accessed @ http://localhost:8081  and also by REST call ./recommendation_backend/app/scraping/scraper_module.py # search_and_scrape(query)
